@@ -166,6 +166,16 @@ def test_plan_entry_slot_is_unique_and_day_bounded(
         db_session.flush()
 
 
+def test_week_start_must_be_a_monday(db_session: Session) -> None:
+    owner = make_user(db_session)
+    db_session.add(WeeklyPlan(owner=owner, week_start=date(2026, 11, 9)))  # lundi
+    db_session.flush()
+
+    db_session.add(WeeklyPlan(owner=owner, week_start=date(2026, 11, 15)))  # dimanche
+    with pytest.raises(IntegrityError, match="ck_weekly_plans_week_start_is_monday"):
+        db_session.flush()
+
+
 def test_tags_can_be_filtered_with_array_overlap(db_session: Session) -> None:
     owner = make_user(db_session)
     make_recipe(db_session, owner, "Salade", tags=["végétarien", "rapide"])
