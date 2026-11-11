@@ -14,17 +14,16 @@ from app.models import PlanEntry, Recipe, User, WeeklyPlan
 from app.schemas.plan import DAYS_PER_WEEK, DrawRequest
 from app.services.common import commit_or_conflict
 from app.services.errors import InvalidInputError, NotFoundError
-from app.services.recipes import visible_recipes_condition
+from app.services.recipes import recipe_pool_condition
 
 _RECIPE_FK = "fk_plan_entries_recipe_id_recipes"
 
 
-def _owned_plans(user: User):
-    return (
-        select(WeeklyPlan)
-        .where(WeeklyPlan.owner_id == user.id)
-        .options(selectinload(WeeklyPlan.entries).joinedload(PlanEntry.recipe))
-    )
+def _owned_plans(user: User, *, with_entries: bool = True):
+    query = select(WeeklyPlan).where(WeeklyPlan.owner_id == user.id)
+    if with_entries:
+        query = query.options(selectinload(WeeklyPlan.entries).joinedload(PlanEntry.recipe))
+    return query
 
 
 def list_plans(
@@ -39,24 +38,30 @@ def list_plans(
     return db.scalars(query).all()
 
 
-def get_plan(db: Session, user: User, plan_id: uuid.UUID) -> WeeklyPlan:
-    plan = db.scalars(_owned_plans(user).where(WeeklyPlan.id == plan_id)).one_or_none()
+def get_plan(
+    db: Session, user: User, plan_id: uuid.UUID, *, with_entries: bool = True
+) -> WeeklyPlan:
+    """Planning de l'utilisateur. `with_entries=False` : sans charger les entrées ni les recettes
+    (vérification d'accès seule)."""
+    query = _owned_plans(user, with_entries=with_entries).where(WeeklyPlan.id == plan_id)
+    plan = db.scalars(query).one_or_none()
     if plan is None:
         raise NotFoundError("Planning introuvable")
     return plan
 
 
 def delete_plan(db: Session, user: User, plan_id: uuid.UUID) -> None:
-    db.delete(get_plan(db, user, plan_id))
+    # Entrées non chargées : supprimées par le ON DELETE CASCADE de la base (passive_deletes)
+    db.delete(get_plan(db, user, plan_id, with_entries=False))
     db.commit()
 
 
 def _drawable_recipe_ids(db: Session, user: User, request: DrawRequest) -> list[uuid.UUID]:
-    query = select(Recipe.id).order_by(Recipe.id)  # ordre stable : tirage reproductible avec rng
-    if request.mine_only:
-        query = query.where(Recipe.owner_id == user.id)
-    else:
-        query = query.where(visible_recipes_condition(user))
+    query = (
+        select(Recipe.id)
+        .where(recipe_pool_condition(user, mine_only=request.mine_only))
+        .order_by(Recipe.id)  # ordre stable : tirage reproductible avec rng
+    )
     if request.exclude_tags:
         query = query.where(~Recipe.tags.overlap(request.exclude_tags))
     return list(db.scalars(query))

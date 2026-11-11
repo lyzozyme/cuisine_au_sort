@@ -4,11 +4,11 @@ import uuid
 from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, SmallInteger, UniqueConstraint, case
+from sqlalchemy import CheckConstraint, ForeignKey, Index, SmallInteger, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
-from app.models.enums import Meal, str_enum
+from app.models.enums import Meal, enum_order, str_enum
 
 if TYPE_CHECKING:
     from app.models.recipe import Recipe
@@ -34,10 +34,7 @@ class WeeklyPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
         # Ordre chronologique des repas (déjeuner puis dîner), pas l'ordre alphabétique des valeurs
-        order_by=lambda: (
-            PlanEntry.day,
-            case({meal.value: i for i, meal in enumerate(Meal)}, value=PlanEntry.meal),
-        ),
+        order_by=lambda: (PlanEntry.day, enum_order(Meal, PlanEntry.meal)),
     )
 
 

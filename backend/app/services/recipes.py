@@ -23,6 +23,11 @@ def visible_recipes_condition(user: User) -> ColumnElement[bool]:
     return or_(Recipe.owner_id == user.id, Recipe.visibility == Visibility.PUBLIC)
 
 
+def recipe_pool_condition(user: User, *, mine_only: bool) -> ColumnElement[bool]:
+    """Mes recettes seulement (`mine_only`), sinon toutes celles qui me sont visibles."""
+    return Recipe.owner_id == user.id if mine_only else visible_recipes_condition(user)
+
+
 def _with_ingredients(query):
     return query.options(selectinload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient))
 
@@ -39,7 +44,7 @@ def list_recipes(
 ) -> Sequence[Recipe]:
     query = (
         _with_ingredients(select(Recipe))
-        .where(Recipe.owner_id == user.id if mine else visible_recipes_condition(user))
+        .where(recipe_pool_condition(user, mine_only=mine))
         .order_by(func.lower(Recipe.name), Recipe.id)
         .limit(limit)
         .offset(offset)

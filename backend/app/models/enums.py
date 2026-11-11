@@ -6,7 +6,7 @@ migration de type, seulement une mise à jour de la contrainte CHECK.
 
 from enum import StrEnum
 
-from sqlalchemy import Enum
+from sqlalchemy import Case, ColumnElement, Enum, case
 
 ENUM_COLUMN_LENGTH = 32
 
@@ -61,3 +61,9 @@ def str_enum(enum_cls: type[StrEnum], name: str) -> Enum:
         values_callable=lambda cls: [member.value for member in cls],
         validate_strings=True,
     )
+
+
+def enum_order(enum_cls: type[StrEnum], column: ColumnElement) -> Case:
+    """Expression de tri suivant l'ordre de déclaration de l'énumération (et non l'ordre
+    alphabétique des valeurs)."""
+    return case({member.value: i for i, member in enumerate(enum_cls)}, value=column)

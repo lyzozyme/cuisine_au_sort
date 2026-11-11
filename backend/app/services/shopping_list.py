@@ -8,10 +8,11 @@ apparaît sur une ligne par unité : aucune conversion poids/volume n'est tenté
 import itertools
 import uuid
 
-from sqlalchemy import Numeric, case, func, literal, select
+from sqlalchemy import Numeric, func, literal, select
 from sqlalchemy.orm import Session
 
 from app.models import Aisle, Ingredient, PlanEntry, Recipe, RecipeIngredient, User
+from app.models.enums import enum_order
 from app.schemas.shopping_list import (
     ShoppingAisleRead,
     ShoppingIngredientRead,
@@ -21,7 +22,7 @@ from app.schemas.shopping_list import (
 from app.services.plans import get_plan
 
 # Ordre des rayons : celui de l'énumération (parcours type d'un magasin), pas l'ordre alphabétique
-_AISLE_ORDER = case({aisle.value: i for i, aisle in enumerate(Aisle)}, value=Ingredient.aisle)
+_AISLE_ORDER = enum_order(Aisle, Ingredient.aisle)
 # Précision des colonnes de quantité : NUMERIC(10, 3)
 _QUANTITY_SCALE = 3
 
@@ -35,7 +36,7 @@ def build_shopping_list(
     chaque recette est ramenée à ce nombre de personnes (quantité × servings / recipe.servings).
     Une recette planifiée plusieurs fois compte autant de fois.
     """
-    plan = get_plan(db, user, plan_id)
+    plan = get_plan(db, user, plan_id, with_entries=False)
 
     quantity = RecipeIngredient.quantity
     if servings is not None:
