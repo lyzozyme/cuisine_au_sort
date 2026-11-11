@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, SmallInteger, UniqueConstraint, case
@@ -19,7 +19,11 @@ class WeeklyPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     """Planning de repas d'une semaine. Toujours privé à son propriétaire."""
 
     __tablename__ = "weekly_plans"
-    __table_args__ = (Index("ix_weekly_plans_owner_id_week_start", "owner_id", "week_start"),)
+    __table_args__ = (
+        Index("ix_weekly_plans_owner_id_week_start", "owner_id", "week_start"),
+        # Les jours des entrées (0 = lundi) sont relatifs à week_start, qui doit donc être un lundi
+        CheckConstraint("EXTRACT(ISODOW FROM week_start) = 1", name="week_start_is_monday"),
+    )
 
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     week_start: Mapped[date]
@@ -56,3 +60,8 @@ class PlanEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     plan: Mapped[WeeklyPlan] = relationship(back_populates="entries")
     recipe: Mapped[Recipe] = relationship()
+
+    @property
+    def scheduled_on(self) -> date:
+        """Date du repas."""
+        return self.plan.week_start + timedelta(days=self.day)

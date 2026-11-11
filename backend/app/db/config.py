@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     environment: str = "local"
 
     database_url: str = (
-        "postgresql+psycopg://cuisineausort:cuisineausort@localhost:5432/cuisineausort"
+        "postgresql+psycopg://cuisineausort:cuisineausort@127.0.0.1:5432/cuisineausort"
     )
     test_database_url: str = (
-        "postgresql+psycopg://cuisineausort:cuisineausort@localhost:5432/cuisineausort_test"
+        "postgresql+psycopg://cuisineausort:cuisineausort@127.0.0.1:5432/cuisineausort_test"
     )
     # Délai max (secondes) pour ouvrir une connexion : /health doit échouer vite si la base tombe
     database_connect_timeout: int = 5

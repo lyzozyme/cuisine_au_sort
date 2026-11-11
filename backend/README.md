@@ -37,6 +37,10 @@ uv run --directory backend uvicorn app.main:app --reload
 | `GET` | `/recipes` | Recettes visibles (`q`, `tag`, `mine`, `limit`, `offset`) |
 | `POST` | `/recipes` | Création avec ses ingrédients |
 | `GET` / `PATCH` / `DELETE` | `/recipes/{id}` | Lecture, modification partielle, suppression (409 si planifiée) |
+| `POST` | `/plans/draw` | Tirage au sort d'une semaine de repas, enregistré comme planning |
+| `GET` | `/plans` | Mes plannings, du plus récent au plus ancien (`limit`, `offset`) |
+| `GET` / `DELETE` | `/plans/{id}` | Lecture, suppression d'un planning (privé : 404 pour les autres) |
+| `GET` | `/plans/{id}/shopping-list` | Liste de courses du planning (`servings` : nombre de personnes) |
 
 - Toutes les routes sauf `/health` passent par `get_current_user` (utilisateur par défaut du seed).
 - **Visibilité** : une recette est visible si j'en suis propriétaire ou si elle est publique
@@ -48,6 +52,25 @@ uv run --directory backend uvicorn app.main:app --reload
 - **Unités** : à la saisie, `kg`, `cl`, `dl` et `l` sont convertis en `g` / `ml`. Sans unité, l'unité
   par défaut de l'ingrédient est utilisée.
 - Erreurs métier : `{"detail": "..."}` avec 403, 404, 409 ou 422.
+
+### Tirage au sort (`POST /plans/draw`)
+
+```json
+{"week_start": "2026-11-16", "meal_count": 5, "meals": ["dinner"], "exclude_tags": ["long"], "mine_only": false}
+```
+
+Tous les champs sont optionnels. `week_start` doit être un lundi (par défaut : le prochain lundi,
+ou aujourd'hui si on est lundi). Les repas sont placés dans l'ordre chronologique : ici, les dîners
+du lundi au vendredi. Les recettes sont tirées sans doublon parmi les recettes visibles (ou les
+miennes avec `mine_only`), hors tags exclus. S'il n'y en a pas assez : 422, rien n'est enregistré.
+
+### Liste de courses (`GET /plans/{id}/shopping-list`)
+
+Quantités additionnées par **ingrédient et unité** (200 g et 2 `tbsp` de farine restent deux
+lignes : pas de conversion poids/volume), regroupées par rayon dans l'ordre du parcours en magasin
+(`Aisle`). Avec `?servings=N`, chaque recette est ramenée à N personnes
+(quantité × N / portions de la recette), arrondi à 3 décimales. Une recette planifiée deux fois
+compte deux fois.
 
 ## Base de données et migrations
 
