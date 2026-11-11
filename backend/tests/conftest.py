@@ -32,6 +32,8 @@ def db_session(test_engine) -> Iterator[Session]:
 @pytest.fixture
 def client(db_session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_db] = lambda: db_session
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
