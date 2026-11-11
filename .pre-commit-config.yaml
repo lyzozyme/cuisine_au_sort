@@ -1,0 +1,24 @@
+# Hooks pre-commit du monorepo.
+# Installation (une fois) : cd backend && uv run pre-commit install
+#
+# Ruff est appelé via `uv run` pour utiliser exactement la version verrouillée dans
+# backend/uv.lock (même version qu'en local et en CI). La configuration est lue depuis
+# backend/pyproject.toml.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (backend)
+        entry: uv run --project backend ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        files: ^backend/
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format (backend)
+        entry: uv run --project backend ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        files: ^backend/
+        require_serial: true
