@@ -151,7 +151,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_recipes")),
         sa.UniqueConstraint("owner_id", "name", name=op.f("uq_recipes_owner_id_name")),
     )
-    op.create_index(op.f("ix_recipes_owner_id"), "recipes", ["owner_id"], unique=False)
     op.create_index("ix_recipes_tags", "recipes", ["tags"], unique=False, postgresql_using="gin")
     op.create_table(
         "weekly_plans",
@@ -299,7 +298,6 @@ def downgrade() -> None:
     op.drop_index("ix_weekly_plans_owner_id_week_start", table_name="weekly_plans")
     op.drop_table("weekly_plans")
     op.drop_index("ix_recipes_tags", table_name="recipes", postgresql_using="gin")
-    op.drop_index(op.f("ix_recipes_owner_id"), table_name="recipes")
     op.drop_table("recipes")
     op.drop_table("users")
     op.drop_table("ingredients")

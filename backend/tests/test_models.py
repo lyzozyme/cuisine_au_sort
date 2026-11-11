@@ -185,3 +185,44 @@ def test_seed_default_user_is_idempotent(db_session: Session) -> None:
 
     assert first.id == second.id
     assert db_session.scalar(select(func.count()).select_from(User)) == 1
+
+
+def test_plan_entries_are_ordered_lunch_before_dinner(db_session: Session) -> None:
+    owner = make_user(db_session)
+    recipe = make_recipe(db_session, owner)
+    plan = WeeklyPlan(owner=owner, week_start=date(2026, 11, 9))
+    plan.entries += [
+        PlanEntry(day=1, meal=Meal.DINNER, recipe=recipe),
+        PlanEntry(day=0, meal=Meal.DINNER, recipe=recipe),
+        PlanEntry(day=0, meal=Meal.LUNCH, recipe=recipe),
+    ]
+    db_session.add(plan)
+    db_session.flush()
+    db_session.expire_all()
+
+    loaded = db_session.get(WeeklyPlan, plan.id)
+    assert [(e.day, e.meal) for e in loaded.entries] == [
+        (0, Meal.LUNCH),
+        (0, Meal.DINNER),
+        (1, Meal.DINNER),
+    ]
+
+
+def test_in_place_tag_changes_are_persisted(db_session: Session) -> None:
+    recipe = make_recipe(db_session, make_user(db_session), tags=["rapide"])
+    recipe.tags.append("végétarien")
+    db_session.flush()
+    db_session.expire_all()
+
+    assert db_session.get(Recipe, recipe.id).tags == ["rapide", "végétarien"]
+
+
+def test_deleting_user_with_loaded_recipes_cascades(db_session: Session) -> None:
+    owner = make_user(db_session)
+    make_recipe(db_session, owner)
+    assert len(owner.recipes) == 1  # collection chargée
+
+    db_session.delete(owner)
+    db_session.flush()
+
+    assert db_session.scalar(select(func.count()).select_from(Recipe)) == 0

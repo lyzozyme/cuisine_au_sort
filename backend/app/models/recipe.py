@@ -15,6 +15,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -34,15 +35,15 @@ class Recipe(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_recipes_tags", "tags", postgresql_using="gin"),
     )
 
-    owner_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), index=True
-    )
+    # Pas d'index dédié : uq_recipes_owner_id_name (owner_id en tête) couvre owner_id
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text)
     servings: Mapped[int] = mapped_column(default=2)
     instructions: Mapped[str] = mapped_column(Text, default="", server_default="")
+    # MutableList : les modifications en place (tags.append) sont persistées
     tags: Mapped[list[str]] = mapped_column(
-        ARRAY(String(50)), default=list, server_default=text("'{}'")
+        MutableList.as_mutable(ARRAY(String(50))), default=list, server_default=text("'{}'")
     )
     visibility: Mapped[Visibility] = mapped_column(
         str_enum(Visibility, "visibility"),
