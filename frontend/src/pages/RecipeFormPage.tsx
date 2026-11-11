@@ -48,11 +48,11 @@ function RecipeForm({ recipe, catalog }: { recipe?: Recipe; catalog: Ingredient[
   const set = <K extends keyof RecipeFormState>(field: K, value: RecipeFormState[K]) =>
     setForm((current) => ({ ...current, [field]: value }))
 
+  const setLines = (update: (lines: IngredientLine[]) => IngredientLine[]) =>
+    setForm((current) => ({ ...current, lines: update(current.lines) }))
+
   const setLine = (key: number, changes: Partial<IngredientLine>) =>
-    set(
-      'lines',
-      form.lines.map((line) => (line.key === key ? { ...line, ...changes } : line)),
-    )
+    setLines((lines) => lines.map((line) => (line.key === key ? { ...line, ...changes } : line)))
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -165,19 +165,14 @@ function RecipeForm({ recipe, catalog }: { recipe?: Recipe; catalog: Ingredient[
                 type="button"
                 className="icon"
                 aria-label={`Retirer l'ingrédient n° ${index + 1}`}
-                onClick={() =>
-                  set(
-                    'lines',
-                    form.lines.filter((l) => l.key !== line.key),
-                  )
-                }
+                onClick={() => setLines((lines) => lines.filter((l) => l.key !== line.key))}
               >
                 ✕
               </button>
             </div>
           )
         })}
-        <button type="button" onClick={() => set('lines', [...form.lines, emptyLine()])}>
+        <button type="button" onClick={() => setLines((lines) => [...lines, emptyLine()])}>
           + Ajouter un ingrédient
         </button>
       </fieldset>

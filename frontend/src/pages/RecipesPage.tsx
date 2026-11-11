@@ -4,14 +4,17 @@ import { Link } from 'react-router'
 import { useRecipes } from '../api/queries'
 import { ErrorMessage, Loading } from '../components/Feedback'
 import { VISIBILITY_LABELS } from '../lib/labels'
+import { useDebouncedValue } from '../lib/useDebouncedValue'
 
 export function RecipesPage() {
   const [search, setSearch] = useState('')
   const [tag, setTag] = useState('')
   const [mine, setMine] = useState(false)
+  const debouncedSearch = useDebouncedValue(search.trim())
+  const debouncedTag = useDebouncedValue(tag.trim())
   const recipes = useRecipes({
-    q: search.trim() || undefined,
-    tag: tag.trim() || undefined,
+    q: debouncedSearch || undefined,
+    tag: debouncedTag || undefined,
     mine: mine || undefined,
     limit: 200,
   })

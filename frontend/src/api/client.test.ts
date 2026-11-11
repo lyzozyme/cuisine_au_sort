@@ -20,7 +20,8 @@ describe('errorMessage', () => {
   })
 
   it('a un message par défaut', () => {
-    expect(errorMessage(undefined, 500)).toBe('Erreur inattendue (HTTP 500)')
+    expect(errorMessage(undefined, 418)).toBe('Erreur inattendue (HTTP 418)')
+    expect(errorMessage('', 500)).toMatch(/backend est-il lancé/)
   })
 })
 

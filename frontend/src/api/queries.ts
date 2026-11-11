@@ -117,12 +117,15 @@ export function useDeleteRecipe() {
   return useMutation({
     mutationFn: (id: string) =>
       unwrap(api.DELETE('/recipes/{recipe_id}', { params: { path: { recipe_id: id } } })),
-    onSuccess: () =>
-      Promise.all([
+    onSuccess: (_data, id) => {
+      // Retire la fiche supprimée du cache : sinon l'invalidation la recharge (404) avant la navigation
+      queryClient.removeQueries({ queryKey: [...queryKeys.recipes, 'detail', id] })
+      return Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.recipes }),
         // Les ingrédients de la recette peuvent maintenant être supprimés
         queryClient.invalidateQueries({ queryKey: queryKeys.ingredients }),
-      ]),
+      ])
+    },
   })
 }
 
@@ -131,7 +134,8 @@ export function useDeleteRecipe() {
 export function usePlans() {
   return useQuery({
     queryKey: [...queryKeys.plans, 'list'],
-    queryFn: () => unwrap(api.GET('/plans')),
+    // Maximum de l'API (20 par défaut) : sinon les plannings plus anciens n'apparaissent pas
+    queryFn: () => unwrap(api.GET('/plans', { params: { query: { limit: 100 } } })),
   })
 }
 
@@ -168,6 +172,11 @@ export function useDeletePlan() {
   return useMutation({
     mutationFn: (id: string) =>
       unwrap(api.DELETE('/plans/{plan_id}', { params: { path: { plan_id: id } } })),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.plans }),
+    onSuccess: (_data, id) => {
+      // Retire le planning supprimé du cache : sinon l'invalidation le recharge (404) avant la navigation
+      queryClient.removeQueries({ queryKey: [...queryKeys.plans, 'detail', id] })
+      queryClient.removeQueries({ queryKey: [...queryKeys.plans, 'shopping-list', id] })
+      return queryClient.invalidateQueries({ queryKey: queryKeys.plans })
+    },
   })
 }

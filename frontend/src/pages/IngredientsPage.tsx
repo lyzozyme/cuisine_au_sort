@@ -9,6 +9,7 @@ import {
 } from '../api/queries'
 import { ErrorMessage, Loading } from '../components/Feedback'
 import { AISLE_LABELS, UNIT_LABELS, options } from '../lib/labels'
+import { useDebouncedValue } from '../lib/useDebouncedValue'
 
 type Draft = { name: string; default_unit: Unit; aisle: Aisle }
 
@@ -16,7 +17,8 @@ const EMPTY_DRAFT: Draft = { name: '', default_unit: 'g', aisle: 'other' }
 
 export function IngredientsPage() {
   const [search, setSearch] = useState('')
-  const ingredients = useIngredients({ q: search.trim() || undefined, limit: 200 })
+  const debouncedSearch = useDebouncedValue(search.trim())
+  const ingredients = useIngredients({ q: debouncedSearch || undefined, limit: 200 })
   const deleteIngredient = useDeleteIngredient()
   const [editingId, setEditingId] = useState<string | null>(null)
 
@@ -131,7 +133,7 @@ function CreateIngredientForm() {
   const onSubmit = (event: FormEvent) => {
     event.preventDefault()
     // On garde unité et rayon : pratique pour saisir plusieurs ingrédients d'un même rayon
-    createIngredient.mutate(draft, { onSuccess: () => setDraft({ ...draft, name: '' }) })
+    createIngredient.mutate(draft, { onSuccess: () => setDraft((current) => ({ ...current, name: '' })) })
   }
 
   return (

@@ -10,6 +10,7 @@ describe('formatQuantity', () => {
     [275, 'ml', '275 ml'],
     [1, 'piece', '1 pièce'],
     [2.75, 'piece', '2,75 pièces'],
+    [1.5, 'piece', '1,5 pièce'],
     [0.667, 'piece', '0,667 pièce'],
     [2, 'tbsp', '2 c. à soupe'],
     [1, 'tsp', '1 c. à café'],

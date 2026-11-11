@@ -1,4 +1,5 @@
 import type { Unit } from '../api/types'
+import { UNIT_LABELS } from './labels'
 
 const numberFormat = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 })
 
@@ -7,19 +8,15 @@ const PLURALIZABLE: Partial<Record<Unit, [string, string]>> = {
   pinch: ['pincée', 'pincées'],
 }
 
-const SPOONS: Partial<Record<Unit, string>> = {
-  tsp: 'c. à café',
-  tbsp: 'c. à soupe',
-}
-
 /** « 1500 g » -> « 1,5 kg », « 3 piece » -> « 3 pièces », « 2 tbsp » -> « 2 c. à soupe ». */
 export function formatQuantity(quantity: number, unit: Unit): string {
   if (unit === 'g' && quantity >= 1000) return `${numberFormat.format(quantity / 1000)} kg`
   if (unit === 'ml' && quantity >= 1000) return `${numberFormat.format(quantity / 1000)} l`
   const value = numberFormat.format(quantity)
   const plural = PLURALIZABLE[unit]
-  if (plural) return `${value} ${quantity > 1 ? plural[1] : plural[0]}`
-  return `${value} ${SPOONS[unit] ?? unit}`
+  // En français, le pluriel commence à 2 (« 1,5 pièce »)
+  if (plural) return `${value} ${quantity >= 2 ? plural[1] : plural[0]}`
+  return `${value} ${UNIT_LABELS[unit]}`
 }
 
 /** Date ISO (AAAA-MM-JJ) interprétée en date locale, sans décalage de fuseau. */

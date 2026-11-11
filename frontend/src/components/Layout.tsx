@@ -11,7 +11,7 @@ export function Layout() {
   return (
     <>
       <header className="app-header">
-        <NavLink to="/" className="brand">
+        <NavLink to="/" end className="brand">
           🎲 CuisineAuSort
         </NavLink>
         <nav>

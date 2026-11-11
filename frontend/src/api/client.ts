@@ -36,6 +36,8 @@ export function errorMessage(body: unknown, status: number): string {
       })
       .join('\n')
   }
+  // Le proxy Vite répond 5xx sans corps JSON quand le backend est arrêté (fetch ne lève alors pas)
+  if (status >= 500) return `Erreur du serveur ou API injoignable (HTTP ${status}) : le backend est-il lancé ?`
   return `Erreur inattendue (HTTP ${status})`
 }
 
