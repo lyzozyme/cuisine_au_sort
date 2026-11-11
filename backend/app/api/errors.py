@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from app.schemas.common import ErrorRead
+from app.schemas.common import ErrorRead, ValidationErrorRead
 from app.services.errors import (
     ConflictError,
     DomainError,
@@ -32,5 +32,12 @@ def register_exception_handlers(app: FastAPI) -> None:
 
 
 def error_responses(*status_codes: int) -> dict[int | str, dict]:
-    """Documente les erreurs métier d'une route dans l'OpenAPI (utile au client généré)."""
-    return {code: {"model": ErrorRead} for code in status_codes}
+    """Documente les erreurs métier d'une route dans l'OpenAPI (utile au client généré).
+
+    Déclarer 422 remplace la réponse de validation documentée par FastAPI : le schéma 422 réunit
+    donc l'erreur métier et l'erreur de validation (`detail` liste).
+    """
+    return {
+        code: {"model": ErrorRead | ValidationErrorRead if code == 422 else ErrorRead}
+        for code in status_codes
+    }

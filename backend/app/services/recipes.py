@@ -10,6 +10,8 @@ from app.services.common import commit_or_conflict, contains_ignore_case
 from app.services.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
 from app.services.units import normalize_quantity
 
+_NAME_CONSTRAINT = "uq_recipes_owner_id_name"
+
 
 def visible_recipes_condition(user: User) -> ColumnElement[bool]:
     """Règle de visibilité des recettes : SEUL endroit où elle est définie.
@@ -44,8 +46,8 @@ def list_recipes(
     )
     if search:
         query = query.where(contains_ignore_case(Recipe.name, search))
-    if tag:
-        query = query.where(Recipe.tags.contains([tag.strip().lower()]))
+    if tag and (tag := tag.strip().lower()):
+        query = query.where(Recipe.tags.contains([tag]))
     return db.scalars(query).all()
 
 
@@ -81,6 +83,8 @@ def _ensure_name_available(
 
 def _load_ingredients(db: Session, items: list[RecipeIngredientIn]) -> dict[uuid.UUID, Ingredient]:
     ids = {item.ingredient_id for item in items}
+    if not ids:
+        return {}
     found = {i.id: i for i in db.scalars(select(Ingredient).where(Ingredient.id.in_(ids)))}
     if missing := ids - found.keys():
         raise InvalidInputError(f"Ingrédient(s) inconnu(s) : {', '.join(map(str, missing))}")
@@ -114,7 +118,9 @@ def create_recipe(db: Session, user: User, data: RecipeCreate) -> Recipe:
     recipe = Recipe(owner=user, **data.model_dump(exclude={"ingredients"}))
     _set_ingredients(db, recipe, data.ingredients)
     db.add(recipe)
-    commit_or_conflict(db, f"Vous avez déjà une recette nommée « {data.name} »")
+    commit_or_conflict(
+        db, f"Vous avez déjà une recette nommée « {data.name} »", constraint=_NAME_CONSTRAINT
+    )
     return get_recipe(db, user, recipe.id)
 
 
@@ -127,7 +133,9 @@ def update_recipe(db: Session, user: User, recipe_id: uuid.UUID, data: RecipeUpd
     if data.ingredients is not None:
         _set_ingredients(db, recipe, data.ingredients)
         recipe.updated_at = func.now()  # la ligne recipes peut ne pas changer elle-même
-    commit_or_conflict(db, f"Vous avez déjà une recette nommée « {recipe.name} »")
+    commit_or_conflict(
+        db, f"Vous avez déjà une recette nommée « {recipe.name} »", constraint=_NAME_CONSTRAINT
+    )
     db.expire(recipe)  # recharge updated_at et les ingrédients
     return get_recipe(db, user, recipe.id)
 
@@ -142,4 +150,8 @@ def delete_recipe(db: Session, user: User, recipe_id: uuid.UUID) -> None:
             f"Recette utilisée dans {plan_count} planning(s) : retirez-la avant de la supprimer"
         )
     db.delete(recipe)
-    commit_or_conflict(db, "Recette utilisée dans un planning : suppression impossible")
+    commit_or_conflict(
+        db,
+        "Recette utilisée dans un planning : suppression impossible",
+        constraint="fk_plan_entries_recipe_id_recipes",
+    )

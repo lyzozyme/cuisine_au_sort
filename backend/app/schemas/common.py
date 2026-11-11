@@ -8,6 +8,18 @@ class ErrorRead(BaseModel):
     detail: str
 
 
+class ValidationErrorItem(BaseModel):
+    loc: list[str | int]
+    msg: str
+    type: str
+
+
+class ValidationErrorRead(BaseModel):
+    """Erreur de validation de la requête (format FastAPI), aussi renvoyée en 422."""
+
+    detail: list[ValidationErrorItem]
+
+
 class InputModel(BaseModel):
     """Base des schémas d'entrée : les champs inconnus sont refusés (fautes de frappe visibles)."""
 
