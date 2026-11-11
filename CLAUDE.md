@@ -47,7 +47,7 @@ Règles :
 
 ## Authentification et accès
 
-- Toutes les routes passent par une dépendance FastAPI `get_current_user`. Au départ elle renvoie l'utilisateur par défaut ; plus tard elle décodera un token (JWT ou OIDC), sans modifier les routes.
+- Toutes les routes (sauf `/health`, public pour la supervision) passent par une dépendance FastAPI `get_current_user`. Au départ elle renvoie l'utilisateur par défaut ; plus tard elle décodera un token (JWT ou OIDC), sans modifier les routes.
 - Le filtrage par utilisateur se fait **dans la couche service**, centralisé dans une seule fonction : une recette est visible si `owner_id == me` OR `visibility == public` OR partagée avec moi.
 
 ## Fonctionnalités cibles de l'API

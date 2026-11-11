@@ -27,6 +27,28 @@ uv run --directory backend uvicorn app.main:app --reload
 - Documentation OpenAPI : http://localhost:8000/docs
 - Santé : `GET /health` (200 si la base répond, 503 sinon)
 
+## API
+
+| Méthode | Route | Description |
+| --- | --- | --- |
+| `GET` | `/ingredients` | Liste (`q` : recherche, `aisle`, `limit`, `offset`) |
+| `POST` | `/ingredients` | Création (nom unique, insensible à la casse) |
+| `GET` / `PATCH` / `DELETE` | `/ingredients/{id}` | Lecture, modification partielle, suppression (409 si utilisé) |
+| `GET` | `/recipes` | Recettes visibles (`q`, `tag`, `mine`, `limit`, `offset`) |
+| `POST` | `/recipes` | Création avec ses ingrédients |
+| `GET` / `PATCH` / `DELETE` | `/recipes/{id}` | Lecture, modification partielle, suppression (409 si planifiée) |
+
+- Toutes les routes sauf `/health` passent par `get_current_user` (utilisateur par défaut du seed).
+- **Visibilité** : une recette est visible si j'en suis propriétaire ou si elle est publique
+  (`visible_recipes_condition` dans `app/services/recipes.py`, seul endroit où la règle est définie).
+  Une recette invisible renvoie 404 ; une recette visible mais d'un autre utilisateur renvoie 403 en
+  modification/suppression.
+- **PATCH** : seuls les champs envoyés sont modifiés ; `ingredients`, s'il est envoyé, remplace la
+  liste complète. `null` n'est accepté que pour `description`.
+- **Unités** : à la saisie, `kg`, `cl`, `dl` et `l` sont convertis en `g` / `ml`. Sans unité, l'unité
+  par défaut de l'ingrédient est utilisée.
+- Erreurs métier : `{"detail": "..."}` avec 403, 404, 409 ou 422.
+
 ## Base de données et migrations
 
 Modèles SQLAlchemy dans `app/models`, migrations Alembic dans `alembic/versions`.

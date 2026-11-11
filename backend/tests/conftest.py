@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -8,9 +8,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, make_url, text
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.db.config import get_settings
+from app.db.seed import seed_default_user
 from app.db.session import SessionLocal, build_engine, get_db
 from app.main import app
+from app.models import User
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
@@ -70,10 +73,36 @@ def db_session(test_engine: Engine) -> Iterator[Session]:
 
 
 @pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
+def default_user(db_session: Session) -> User:
+    """Utilisateur par défaut (seed), renvoyé par get_current_user."""
+    return seed_default_user(db_session)
+
+
+@pytest.fixture
+def other_user(db_session: Session) -> User:
+    user = User(email="bob@example.com", display_name="Bob")
+    db_session.add(user)
+    db_session.flush()
+    return user
+
+
+@pytest.fixture
+def client(db_session: Session, default_user: User) -> Iterator[TestClient]:
+    """Client HTTP sur la base de test, authentifié comme l'utilisateur par défaut."""
     app.dependency_overrides[get_db] = lambda: db_session
     try:
         with TestClient(app) as test_client:
             yield test_client
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def act_as() -> Iterator[Callable[[User], None]]:
+    """`act_as(user)` : les requêtes suivantes sont faites au nom de `user`."""
+
+    def _act_as(user: User) -> None:
+        app.dependency_overrides[get_current_user] = lambda: user
+
+    yield _act_as
+    app.dependency_overrides.pop(get_current_user, None)
