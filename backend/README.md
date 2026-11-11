@@ -12,7 +12,14 @@ docker compose up -d db
 cp .env.example .env
 uv sync
 uv run uvicorn app.main:app --reload
+
+# ou depuis la racine du dépôt
+uv run --directory backend uvicorn app.main:app --reload
 ```
+
+> L'argument d'uvicorn est un **chemin d'import Python** (`module:attribut`), pas un chemin de
+> fichier : `.\backend\app.main:app` ne fonctionne pas. Le package `app` doit être importable,
+> donc le processus doit tourner depuis `backend/` (c'est ce que fait `--directory backend`).
 
 - API : http://localhost:8000
 - Documentation OpenAPI : http://localhost:8000/docs
