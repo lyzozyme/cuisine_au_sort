@@ -1,0 +1,294 @@
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --text: #2b2a27;
+  --muted: #74706a;
+  --border: #e4e0d8;
+  --accent: #c2410c;
+  --accent-dark: #9a3412;
+  --danger: #b91c1c;
+  --radius: 8px;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.25rem;
+}
+
+/* --- Mise en page -------------------------------------------------------------------------- */
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.app-header a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.app-header a.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.app-header .brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.app-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.page-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.capitalize::first-letter {
+  text-transform: uppercase;
+}
+
+.instructions {
+  white-space: pre-wrap;
+}
+
+/* --- Formulaires --------------------------------------------------------------------------- */
+
+input,
+select,
+textarea,
+button,
+.button {
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+button,
+.button {
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover,
+.button:hover {
+  border-color: var(--muted);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.primary:hover {
+  background: var(--accent-dark);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.icon {
+  padding: 0.4rem 0.7rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 720px;
+}
+
+.form label:not(.checkbox) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 500;
+}
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.row .grow {
+  flex: 1;
+}
+
+.ingredient-line select:first-child {
+  min-width: 14rem;
+}
+
+.ingredient-line input {
+  width: 7rem;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inline input {
+  width: 5rem;
+}
+
+.inline-form,
+.filters,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inline-form,
+.filters {
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: var(--danger);
+  white-space: pre-line;
+  margin: 0.5rem 0;
+}
+
+/* --- Listes et tableaux -------------------------------------------------------------------- */
+
+.cards {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.card p {
+  margin: 0.25rem 0;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.tag {
+  font-size: 0.8rem;
+  background: #f3ede4;
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist .done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
