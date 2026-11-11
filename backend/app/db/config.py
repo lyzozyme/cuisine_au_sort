@@ -27,6 +27,10 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
 
+    # Utilisateur unique créé par le seed, renvoyé par get_current_user tant qu'il n'y a pas d'auth
+    default_user_email: str = "default@cuisineausort.local"
+    default_user_display_name: str = "Utilisateur par défaut"
+
 
 @lru_cache
 def get_settings() -> Settings:
