@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_exception_handlers
-from app.api.routers import health, ingredients, plans, recipes
+from app.api.routers import health, ingredients, plans, recipes, users
 from app.db.config import get_settings
 
 
@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     app.include_router(ingredients.router)
     app.include_router(recipes.router)
     app.include_router(plans.router)
+    app.include_router(users.router)
     return app
 
 

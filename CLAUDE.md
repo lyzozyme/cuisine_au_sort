@@ -9,7 +9,7 @@ Monorepo avec deux applications distinctes :
 ```
 cuisineausort/
 ├── backend/          # API Python : FastAPI + SQLAlchemy 2.x + PostgreSQL
-├── frontend/         # Interface utilisateur (framework à définir, suggestion : React + Vite + TypeScript)
+├── frontend/         # Interface utilisateur : React + Vite + TypeScript (client API généré depuis l'OpenAPI)
 ├── docker-compose.yml
 └── .github/workflows/
 ```
